@@ -7,16 +7,28 @@
    ============================================================ */
 
 /* Try to load the real character images; if they exist, they replace
-   the built-in SVG placeholders automatically (see CSS .char-img). */
+   the built-in SVG placeholders automatically (see CSS .char-img).
+   An img with data-fallback retries that src once before giving up
+   (e.g. the question screen's thinking pose falls back to idle). */
 document.querySelectorAll(".char-img").forEach((img) => {
+  const tryFallback = () => {
+    const fallback = img.dataset.fallback;
+    if (fallback && img.getAttribute("src") !== fallback) img.src = fallback;
+  };
   img.addEventListener("load", () => img.classList.add("loaded"));
-  if (img.complete && img.naturalWidth > 0) img.classList.add("loaded");
+  img.addEventListener("error", tryFallback);
+  // The image may have finished (either way) before these listeners
+  // attached — resource events don't wait for end-of-body scripts
+  if (img.complete) {
+    if (img.naturalWidth > 0) img.classList.add("loaded");
+    else tryFallback();
+  }
 });
 
 /* ============================================================
    FLOATING BACKGROUND HEARTS + SPARKLES
    ============================================================ */
-const DECOR = ["🩷", "💗", "💕", "✨", "⭐", "🌸", "💖", "✨"];
+const DECOR = ["🩷", "💗", "💜", "💕", "✨", "⭐", "🌸", "💖", "💜", "✨"];
 function spawnFloaty() {
   const el = document.createElement("div");
   const symbol = DECOR[Math.floor(Math.random() * DECOR.length)];
@@ -94,7 +106,7 @@ function celebrate() {
 
 /* Hearts that float up from the bottom of the screen */
 function launchHearts() {
-  const symbols = ["🩷", "💖", "💗", "💕", "✨"];
+  const symbols = ["🩷", "💖", "💗", "💜", "💕", "✨"];
   let launched = 0;
   const timer = setInterval(() => {
     const h = document.createElement("div");

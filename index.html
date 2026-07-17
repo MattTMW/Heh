@@ -14,9 +14,11 @@
      character and a generated chime sound. To use real artwork,
      just put these files in the assets/ folder:
 
-       assets/chiikawa_idle.png   → intro + question screens
-       assets/chiikawa_happy.png  → celebration screen
-       assets/our_song.mp3        → plays (looping) once she says YES
+       assets/chiikawa_idle.png     → intro screen
+       assets/chiikawa_thinking.png → question screen (falls back to
+                                      the idle image if missing)
+       assets/chiikawa_happy.png    → celebration screen
+       assets/our_song.mp3          → plays (looping) once she says YES
 
        assets/sad.gif             → shown on the sad screen if she
                                     really says no (a .png/.jpg also
@@ -99,8 +101,10 @@
       <!-- Text is set by dodge.js (NO_PROMPTS) before each show -->
       <div class="speech-bubble" id="speech-bubble" aria-live="polite"></div>
 
-      <!-- Same idle image / placeholder as the intro -->
-      <img class="char-img" src="assets/chiikawa_idle.png" alt="A cute character asking hopefully">
+      <!-- Thinking pose; falls back to the idle image until
+         assets/chiikawa_thinking.png is added -->
+      <img class="char-img" src="assets/chiikawa_thinking.png" data-fallback="assets/chiikawa_idle.png"
+        alt="A cute character thinking hard">
       <svg class="char-placeholder" viewBox="0 0 200 200" role="img" aria-label="Cute placeholder character">
         <ellipse cx="62" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
         <ellipse cx="138" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
@@ -130,7 +134,7 @@
      ========================================================== -->
   <section id="screen-no" class="screen screen-sad" aria-label="Sad ending">
     <h1>NOOOOOOO WHYHYYYHYHWHHYY😔</h1>
-    <p class="subtitle">breh.</p>
+    <p class="subtitle">why are we even here... breh. 🧍‍♂️ </p>
 
     <div class="char-wrap sad-wrap" id="char-sad">
       <img class="char-img" src="assets/crying_hamster.png" alt="A sad character">
@@ -156,7 +160,7 @@
     </div>
 
     <!-- A soft way back, so the story doesn't have to end here -->
-    <button id="btn-reconsider" class="btn btn-yes">Wait... I change my mind! 💗</button>
+    <button id="btn-reconsider" class="btn btn-yes">HMMM... I change my mind!</button>
   </section>
 
   <!-- ==========================================================
@@ -164,7 +168,7 @@
      ========================================================== -->
   <section id="screen-yes" class="screen screen-yes" aria-label="Celebration">
     <h1>HOORAYY!! 🩷</h1>
-    <p class="subtitle">Here's a little collage of all our photos (and some of you heh) so far :D</p>
+    <p class="subtitle">Here's a little collage of my favorite photos of us (and some of you heh) so far :D</p>
 
     <div class="char-wrap" id="char-happy">
       <img class="char-img" src="assets/chiikawa_happy.png" alt="A cute character celebrating joyfully">
@@ -192,7 +196,7 @@
     </div>
 
     <div class="bounce-hearts" aria-hidden="true">
-      <span>💖</span><span>✨</span><span>🩷</span><span>✨</span><span>💖</span>
+      <span>💖</span><span>💜</span><span>🩷</span><span>💜</span><span>💖</span>
     </div>
 
     <!-- A sealed envelope with the handwritten letter inside (assets/letter.jpg) -->

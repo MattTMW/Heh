@@ -19,7 +19,7 @@ function sizeCanvas() {
 window.addEventListener("resize", sizeCanvas);
 sizeCanvas();
 
-const CONFETTI_COLORS = ["#ff9ec4", "#ffd3e2", "#b8e0ff", "#fff2a8", "#d5c4ff", "#ffffff", "#ffb3cf"];
+const CONFETTI_COLORS = ["#ff9ec4", "#ffd3e2", "#b8e0ff", "#fff2a8", "#d5c4ff", "#b39df0", "#c9b2ff", "#ffffff", "#ffb3cf"];
 
 function launchConfetti() {
   // Two bursts from the bottom corners + a center pop

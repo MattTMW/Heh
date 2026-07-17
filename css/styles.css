@@ -25,6 +25,10 @@
   --text-main: #7a5c6b;
   --text-muted: #9b7e8d;
 
+  /* her favorite color, woven through the pinks */
+  --lavender: #a58ae0;
+  --lavender-soft: #cdbcf2;
+
   /* spacing scale — use these instead of ad-hoc px */
   --space-1: 8px;
   --space-2: 14px;
@@ -64,10 +68,10 @@ body {
   /* prevents double-tap zoom on buttons */
 }
 
-/* Soft pastel gradient background */
+/* Soft pastel gradient background — pink into lavender */
 body {
-  background: linear-gradient(160deg, #ffe9f3 0%, #fff6fb 35%, #e8f4ff 70%, #fdeffa 100%);
-  color: #7a5c6b;
+  background: linear-gradient(160deg, #ffe9f3 0%, #f5ecff 30%, #e8f0ff 55%, #ede4fb 80%, #fdeffa 100%);
+  color: var(--text-main);
   user-select: none;
   -webkit-user-select: none;
 }
@@ -205,8 +209,8 @@ h1 {
 }
 
 .btn-no {
-  background: linear-gradient(180deg, #b8c8f2, #93a9e8);
-  box-shadow: 0 6px 16px rgba(147, 169, 232, 0.4),
+  background: linear-gradient(180deg, var(--lavender-soft), var(--lavender));
+  box-shadow: 0 6px 16px rgba(165, 138, 224, 0.4),
     inset 0 -3px 0 rgba(0, 0, 0, 0.08);
 }
 
@@ -581,9 +585,9 @@ body.sad #bg-decor {
    ========================================================== */
 .envelope-hint {
   font-size: clamp(0.9rem, 3.6vw, 1.05rem);
-  color: #b06a8c;
+  color: #9678c4;
   font-weight: bold;
-  opacity: 0.85;
+  opacity: 0.9;
   margin-top: var(--space-1);
 }
 
