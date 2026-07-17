@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<!-- Mobile-first: this will mostly be opened from a QR code on a phone -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>An Important Question 🩷</title>
+
+<!-- ============================================================
+     ASSETS — REPLACE THESE WITH YOUR OWN FILES (optional!)
+     ------------------------------------------------------------
+     The page works out-of-the-box with a cute built-in placeholder
+     character and a generated chime sound. To use real artwork,
+     just put these files next to index.html:
+
+       chiikawa_idle.png   → shown on the intro + question screens
+       chiikawa_happy.png  → shown on the celebration screen
+       celebration.mp3     → played when she says YES
+
+     If the files exist they are used automatically; if not, the
+     placeholders kick in. No code changes needed.
+     ============================================================ -->
+
+<style>
+/* ==========================================================
+   1. BASE / RESET
+   ========================================================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;               /* screens are full-viewport; no scrolling */
+  font-family: "Trebuchet MS", "Comic Sans MS", "Segoe UI", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;     /* prevents double-tap zoom on buttons */
+}
+
+/* Soft pastel gradient background */
+body {
+  background: linear-gradient(160deg, #ffe9f3 0%, #fff6fb 35%, #e8f4ff 70%, #fdeffa 100%);
+  color: #7a5c6b;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ==========================================================
+   2. FLOATING BACKGROUND DECOR (hearts + sparkles)
+   Elements are created by JS and float upward forever.
+   ========================================================== */
+#bg-decor {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.floaty {
+  position: absolute;
+  bottom: -8vh;
+  animation: floatUp linear forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes floatUp {
+  0%   { transform: translateY(0) translateX(0) rotate(0deg) scale(1); opacity: 0; }
+  10%  { opacity: 0.9; }
+  50%  { transform: translateY(-55vh) translateX(var(--drift)) rotate(15deg) scale(1.1); }
+  100% { transform: translateY(-115vh) translateX(calc(var(--drift) * -1)) rotate(-10deg) scale(0.8); opacity: 0; }
+}
+
+/* Twinkling sparkle variant */
+.sparkle { animation: floatUp linear forwards, twinkle 1.2s ease-in-out infinite; }
+@keyframes twinkle {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.8) drop-shadow(0 0 6px #fff2a8); }
+}
+
+/* ==========================================================
+   3. SCREENS + FADE TRANSITIONS
+   Each "screen" is a full-viewport flex column. Only the one
+   with .active is visible; opacity handles the cross-fade.
+   ========================================================== */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 24px;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s ease, visibility 0.6s;
+  z-index: 1;
+}
+.screen.active { opacity: 1; visibility: visible; }
+
+h1 {
+  font-size: clamp(1.5rem, 6vw, 2.4rem);
+  color: #e2749b;
+  text-shadow: 0 2px 0 #ffffffaa;
+  line-height: 1.35;
+  max-width: 22ch;
+}
+
+.subtitle {
+  font-size: clamp(1.05rem, 4.5vw, 1.4rem);
+  color: #9b7e8d;
+}
+
+/* ==========================================================
+   4. BUTTONS — big, round, touch-friendly (min 56px tall)
+   ========================================================== */
+.btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: clamp(1.1rem, 4.5vw, 1.35rem);
+  padding: 16px 40px;
+  min-height: 56px;
+  min-width: 130px;
+  border-radius: 999px;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(226, 116, 155, 0.35),
+              inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+  transition: transform 0.25s cubic-bezier(.34,1.56,.64,1),
+              box-shadow 0.25s ease,
+              background 0.25s ease;
+}
+.btn:active { transform: scale(0.94); }
+
+.btn-continue { background: linear-gradient(180deg, #ffb3cf, #f78fb5); }
+.btn-yes      { background: linear-gradient(180deg, #ff9ec4, #f26d9d); }
+.btn-no       { background: linear-gradient(180deg, #b8c8f2, #93a9e8);
+                box-shadow: 0 6px 16px rgba(147, 169, 232, 0.4),
+                            inset 0 -3px 0 rgba(0,0,0,0.08); }
+
+.btn-continue:hover, .btn-yes:hover {
+  transform: scale(1.07);
+  box-shadow: 0 10px 22px rgba(226, 116, 155, 0.45),
+              inset 0 -3px 0 rgba(0,0,0,0.08);
+}
+
+/* Gentle idle bounce so the Yes button looks inviting */
+.btn-yes { animation: gentleBounce 2.2s ease-in-out infinite; }
+@keyframes gentleBounce {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.btn-yes:hover { animation: none; } /* hover scale wins over bounce */
+
+/* Continue button fades in ~1s after the intro screen shows */
+#btn-continue {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: none;
+}
+#btn-continue.revealed { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+/* Container for Yes / No — No starts here, then goes fixed to dodge */
+.choices {
+  display: flex;
+  gap: 26px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  min-height: 80px;
+}
+
+/* Once dodging begins, JS switches the No button to fixed positioning
+   and animates it around the viewport with these transitions. */
+#btn-no.dodging {
+  position: fixed;
+  z-index: 50;
+  transition: left 0.28s cubic-bezier(.34,1.4,.64,1),
+              top 0.28s cubic-bezier(.34,1.4,.64,1),
+              transform 0.28s ease;
+}
+
+/* Yes button "encouragement" growth after many dodge attempts */
+#btn-yes.bigger  { scale: 1.18; }
+#btn-yes.biggest { scale: 1.35; }
+#btn-yes { transition: scale 0.5s cubic-bezier(.34,1.56,.64,1); }
+
+/* ==========================================================
+   5. CHARACTER (image with built-in SVG placeholder fallback)
+   ========================================================== */
+.char-wrap {
+  position: relative;
+  width: min(46vw, 210px);
+  animation: charBob 3s ease-in-out infinite;
+}
+@keyframes charBob {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50%      { transform: translateY(-8px) rotate(1.5deg); }
+}
+
+.char-wrap img, .char-wrap svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 8px 14px rgba(226, 116, 155, 0.25));
+}
+
+/* Real image files are hidden until JS confirms they loaded */
+.char-wrap .char-img { display: none; }
+.char-wrap .char-img.loaded { display: block; }
+.char-wrap .char-img.loaded + .char-placeholder { display: none; }
+
+/* Blush circles inside the placeholder SVG — shown on Yes hover */
+.blush { opacity: 0.45; transition: opacity 0.3s ease; }
+.char-wrap.blushing .blush { opacity: 1; animation: blushPulse 0.9s ease-in-out infinite; }
+@keyframes blushPulse {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+/* Whole character wiggles happily while blushing */
+.char-wrap.blushing { animation: charBob 0.6s ease-in-out infinite; }
+
+/* Speech bubble ("Are you suuuure? 🥺") */
+.speech-bubble {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  transform: translate(-50%, 10px) scale(0.8);
+  background: #ffffff;
+  color: #e2749b;
+  font-weight: bold;
+  font-size: clamp(0.95rem, 3.8vw, 1.1rem);
+  padding: 10px 18px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(180, 130, 160, 0.25);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(.34,1.56,.64,1);
+}
+.speech-bubble::after {           /* little tail under the bubble */
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 9px solid transparent;
+  border-top-color: #ffffff;
+  border-bottom: none;
+}
+.speech-bubble.show { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+
+/* ==========================================================
+   6. CELEBRATION SCREEN
+   ========================================================== */
+#screen-yes h1 {
+  font-size: clamp(2.2rem, 10vw, 3.6rem);
+  animation: yayPop 0.6s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes yayPop {
+  0%   { transform: scale(0); }
+  70%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Row of bouncing hearts under the celebration text */
+.bounce-hearts { display: flex; gap: 14px; font-size: 2rem; }
+.bounce-hearts span { animation: heartBounce 0.9s ease-in-out infinite; }
+.bounce-hearts span:nth-child(2) { animation-delay: 0.12s; }
+.bounce-hearts span:nth-child(3) { animation-delay: 0.24s; }
+.bounce-hearts span:nth-child(4) { animation-delay: 0.36s; }
+.bounce-hearts span:nth-child(5) { animation-delay: 0.48s; }
+@keyframes heartBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-16px) scale(1.15); }
+}
+
+/* Hearts that float up from the bottom on celebration */
+.celebrate-heart {
+  position: fixed;
+  bottom: -60px;
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 60;
+  animation: riseUp var(--dur) ease-in forwards;
+}
+@keyframes riseUp {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(-120vh) rotate(var(--spin)); opacity: 0; }
+}
+
+/* Confetti canvas sits above everything but never blocks taps */
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 70;
+}
+
+/* ==========================================================
+   7. ACCESSIBILITY — calm everything down if requested
+   ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01s !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- Floating hearts + sparkles live here (filled by JS) -->
+<div id="bg-decor" aria-hidden="true"></div>
+
+<!-- Confetti canvas for the YES celebration -->
+<canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+<!-- ==========================================================
+     SCREEN 1 — INTRO
+     ========================================================== -->
+<section id="screen-intro" class="screen active" aria-label="Introduction">
+  <h1>Hi! I have an important question...</h1>
+
+  <div class="char-wrap" id="char-intro">
+    <!-- REPLACE ME: put chiikawa_idle.png next to this file and it
+         will automatically appear instead of the placeholder below -->
+    <img class="char-img" src="chiikawa_idle.png" alt="A cute character waiting nervously">
+
+    <!-- Built-in cute placeholder (generic round friend). Safe to
+         delete once you add your own image, but harmless to keep. -->
+    <svg class="char-placeholder" viewBox="0 0 200 200" role="img" aria-label="Cute placeholder character">
+      <!-- ears -->
+      <ellipse cx="62"  cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <ellipse cx="138" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <ellipse cx="62"  cy="44" rx="11" ry="14" fill="#ffd3e2"/>
+      <ellipse cx="138" cy="44" rx="11" ry="14" fill="#ffd3e2"/>
+      <!-- body -->
+      <ellipse cx="100" cy="118" rx="72" ry="68" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <!-- little arms -->
+      <ellipse cx="34"  cy="128" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <ellipse cx="166" cy="128" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <!-- eyes -->
+      <circle cx="74"  cy="106" r="7" fill="#4a3540"/>
+      <circle cx="126" cy="106" r="7" fill="#4a3540"/>
+      <circle cx="76.5" cy="103.5" r="2.4" fill="#fff"/>
+      <circle cx="128.5" cy="103.5" r="2.4" fill="#fff"/>
+      <!-- blush (lights up when Yes is hovered) -->
+      <ellipse class="blush" cx="58"  cy="126" rx="12" ry="7" fill="#ffb3c8"/>
+      <ellipse class="blush" cx="142" cy="126" rx="12" ry="7" fill="#ffb3c8"/>
+      <!-- tiny mouth -->
+      <path d="M92 126 Q100 133 108 126" fill="none" stroke="#4a3540" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <button id="btn-continue" class="btn btn-continue">Continue</button>
+</section>
+
+<!-- ==========================================================
+     SCREEN 2 — THE QUESTION
+     ========================================================== -->
+<section id="screen-question" class="screen" aria-label="The question">
+  <h1 id="question-text">Will you let me take you out on a date?</h1>
+
+  <div class="char-wrap" id="char-question">
+    <div class="speech-bubble" id="speech-bubble">Are you suuuure? 🥺</div>
+
+    <!-- Same idle image / placeholder as the intro -->
+    <img class="char-img" src="chiikawa_idle.png" alt="A cute character asking hopefully">
+    <svg class="char-placeholder" viewBox="0 0 200 200" role="img" aria-label="Cute placeholder character">
+      <ellipse cx="62"  cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <ellipse cx="138" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <ellipse cx="62"  cy="44" rx="11" ry="14" fill="#ffd3e2"/>
+      <ellipse cx="138" cy="44" rx="11" ry="14" fill="#ffd3e2"/>
+      <ellipse cx="100" cy="118" rx="72" ry="68" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <ellipse cx="34"  cy="128" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <ellipse cx="166" cy="128" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <circle cx="74"  cy="106" r="7" fill="#4a3540"/>
+      <circle cx="126" cy="106" r="7" fill="#4a3540"/>
+      <circle cx="76.5" cy="103.5" r="2.4" fill="#fff"/>
+      <circle cx="128.5" cy="103.5" r="2.4" fill="#fff"/>
+      <ellipse class="blush" cx="58"  cy="126" rx="12" ry="7" fill="#ffb3c8"/>
+      <ellipse class="blush" cx="142" cy="126" rx="12" ry="7" fill="#ffb3c8"/>
+      <path d="M92 126 Q100 133 108 126" fill="none" stroke="#4a3540" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="choices">
+    <button id="btn-yes" class="btn btn-yes">💖 Yes</button>
+    <button id="btn-no"  class="btn btn-no">🥺 No</button>
+  </div>
+</section>
+
+<!-- ==========================================================
+     SCREEN 3 — INTERSTITIAL ("I'll ask one more time...")
+     ========================================================== -->
+<section id="screen-again" class="screen" aria-label="Asking again">
+  <h1>I'll ask one more time...</h1>
+</section>
+
+<!-- ==========================================================
+     SCREEN 4 — CELEBRATION
+     ========================================================== -->
+<section id="screen-yes" class="screen" aria-label="Celebration">
+  <h1>YAY!! 🩷</h1>
+  <p class="subtitle">I'll text you the details 😊</p>
+
+  <div class="char-wrap" id="char-happy">
+    <!-- REPLACE ME: put chiikawa_happy.png next to this file for
+         the celebration pose. Placeholder shows a happy face. -->
+    <img class="char-img" src="chiikawa_happy.png" alt="A cute character celebrating joyfully">
+    <svg class="char-placeholder" viewBox="0 0 200 200" role="img" aria-label="Cute placeholder character celebrating">
+      <ellipse cx="62"  cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <ellipse cx="138" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <ellipse cx="62"  cy="44" rx="11" ry="14" fill="#ffd3e2"/>
+      <ellipse cx="138" cy="44" rx="11" ry="14" fill="#ffd3e2"/>
+      <ellipse cx="100" cy="118" rx="72" ry="68" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"/>
+      <!-- arms raised in celebration -->
+      <ellipse cx="30"  cy="92" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" transform="rotate(-30 30 92)"/>
+      <ellipse cx="170" cy="92" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" transform="rotate(30 170 92)"/>
+      <!-- happy closed eyes (^ ^) -->
+      <path d="M66 106 Q74 98 82 106"  fill="none" stroke="#4a3540" stroke-width="4" stroke-linecap="round"/>
+      <path d="M118 106 Q126 98 134 106" fill="none" stroke="#4a3540" stroke-width="4" stroke-linecap="round"/>
+      <!-- permanent happy blush -->
+      <ellipse cx="58"  cy="126" rx="12" ry="7" fill="#ffb3c8" opacity="0.9"/>
+      <ellipse cx="142" cy="126" rx="12" ry="7" fill="#ffb3c8" opacity="0.9"/>
+      <!-- big open smile -->
+      <path d="M86 124 Q100 140 114 124 Z" fill="#e2749b" stroke="#4a3540" stroke-width="3" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="bounce-hearts" aria-hidden="true">
+    <span>💖</span><span>✨</span><span>🩷</span><span>✨</span><span>💖</span>
+  </div>
+</section>
+
+<!-- REPLACE ME: uncomment + add celebration.mp3 for a real sound.
+     Without it, a cute chime is generated with the Web Audio API. -->
+<audio id="celebration-audio" src="celebration.mp3" preload="auto"></audio>
+
+<script>
+"use strict";
+
+/* ============================================================
+   0. SMALL HELPERS
+   ============================================================ */
+const $ = (sel) => document.querySelector(sel);
+const rand = (min, max) => Math.random() * (max - min) + min;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* Try to load the real character images; if they exist, they replace
+   the built-in SVG placeholders automatically (see CSS .char-img). */
+document.querySelectorAll(".char-img").forEach((img) => {
+  img.addEventListener("load", () => img.classList.add("loaded"));
+  if (img.complete && img.naturalWidth > 0) img.classList.add("loaded");
+});
+
+/* ============================================================
+   1. SOUND — Web Audio placeholder effects
+   celebration.mp3 is used if present; otherwise a generated
+   chime plays. Tiny "boing" plays when the No button dodges.
+   ============================================================ */
+let audioCtx = null;
+function getAudioCtx() {
+  // Created lazily on first user interaction (mobile autoplay rules)
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, startDelay, duration, type = "sine", volume = 0.18) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, ctx.currentTime + startDelay);
+    gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + startDelay + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startDelay + duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(ctx.currentTime + startDelay);
+    osc.stop(ctx.currentTime + startDelay + duration + 0.05);
+  } catch (e) { /* audio blocked — no problem, stay silent */ }
+}
+
+function playPop()  { playTone(rand(500, 700), 0, 0.12, "triangle", 0.12); } // dodge boing
+function playClick(){ playTone(880, 0, 0.1, "sine", 0.1); }                  // button tap
+
+function playCelebration() {
+  // Prefer the real file if it loaded successfully
+  const audio = $("#celebration-audio");
+  if (audio && audio.readyState >= 2) {
+    audio.play().catch(() => playChimeFallback());
+  } else {
+    playChimeFallback();
+  }
+}
+function playChimeFallback() {
+  // A happy little ascending arpeggio (C-E-G-C) as the placeholder
+  [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => playTone(f, i * 0.12, 0.5, "sine", 0.16));
+  [523.25, 659.25, 783.99].forEach((f, i) => playTone(f * 2, 0.5 + i * 0.1, 0.4, "triangle", 0.08));
+}
+
+/* ============================================================
+   2. FLOATING BACKGROUND HEARTS + SPARKLES
+   ============================================================ */
+const DECOR = ["🩷", "💗", "💕", "✨", "⭐", "🌸", "💖", "✨"];
+function spawnFloaty() {
+  const el = document.createElement("div");
+  const symbol = DECOR[Math.floor(Math.random() * DECOR.length)];
+  el.textContent = symbol;
+  el.className = "floaty" + (symbol === "✨" || symbol === "⭐" ? " sparkle" : "");
+  el.style.left = rand(0, 100) + "vw";
+  el.style.fontSize = rand(0.8, 1.9) + "rem";
+  el.style.setProperty("--drift", rand(-40, 40) + "px");
+  el.style.animationDuration = rand(7, 14) + "s";
+  $("#bg-decor").appendChild(el);
+  // Clean up after the animation so the DOM never bloats
+  el.addEventListener("animationend", () => el.remove());
+}
+if (!reducedMotion) {
+  for (let i = 0; i < 6; i++) setTimeout(spawnFloaty, i * 400); // initial batch
+  setInterval(spawnFloaty, 900);                                 // steady stream
+}
+
+/* ============================================================
+   3. SCREEN TRANSITIONS
+   ============================================================ */
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+
+/* Intro: fade the Continue button in after ~1 second */
+setTimeout(() => $("#btn-continue").classList.add("revealed"), 1000);
+
+$("#btn-continue").addEventListener("click", () => {
+  playClick();
+  showScreen("#screen-question");
+});
+
+/* ============================================================
+   4. THE DODGING "NO" BUTTON
+   ------------------------------------------------------------
+   Rounds get progressively harder:
+     round 1 → dodge radius 110px
+     round 2 → dodge radius 150px, faster dodges
+     round 3 → dodge radius 190px
+   After the 3rd successful No click, the button gives up and
+   becomes "I changed my mind." (which leads to celebration).
+   ============================================================ */
+const btnNo  = $("#btn-no");
+const btnYes = $("#btn-yes");
+
+let noClicks   = 0;      // how many times No was actually clicked
+let dodgeCount = 0;      // dodges within the current round
+let dodgeRadius = 110;   // proximity that triggers a dodge (px)
+let lastDodge   = 0;     // timestamp throttle so it doesn't teleport wildly
+let surrendered = false; // true once the button becomes "I changed my mind."
+
+/* Move the No button to a random on-screen spot (never off-screen,
+   and never right on top of the Yes button). */
+function dodge() {
+  const now = performance.now();
+  if (now - lastDodge < 250) return;  // throttle
+  lastDodge = now;
+  dodgeCount++;
+
+  btnNo.classList.add("dodging");
+  const bw = btnNo.offsetWidth, bh = btnNo.offsetHeight;
+  const pad = 12;
+
+  // Occasionally swap places with the Yes button instead (fun!)
+  if (dodgeCount > 2 && Math.random() < 0.18) {
+    const yesRect = btnYes.getBoundingClientRect();
+    btnNo.style.left = yesRect.left + "px";
+    btnNo.style.top  = yesRect.top + "px";
+    playPop();
+    afterDodge();
+    return;
+  }
+
+  // Pick a random spot, retrying a few times to avoid the Yes button
+  const yesRect = btnYes.getBoundingClientRect();
+  let x, y;
+  for (let tries = 0; tries < 12; tries++) {
+    x = rand(pad, window.innerWidth  - bw - pad);
+    y = rand(pad, window.innerHeight - bh - pad);
+    const overlapsYes =
+      x < yesRect.right + 20 && x + bw > yesRect.left - 20 &&
+      y < yesRect.bottom + 20 && y + bh > yesRect.top - 20;
+    if (!overlapsYes) break;
+  }
+  btnNo.style.left = x + "px";
+  btnNo.style.top  = y + "px";
+
+  // Occasionally shrink a bit / rotate a little for extra silliness
+  const scale  = Math.random() < 0.3 ? rand(0.78, 0.9) : 1;
+  const rotate = Math.random() < 0.4 ? rand(-14, 14) : 0;
+  btnNo.style.transform = `scale(${scale}) rotate(${rotate}deg)`;
+
+  playPop();
+  afterDodge();
+}
+
+/* Escalating reactions as she keeps trying to press No */
+function afterDodge() {
+  // ~8 dodges: speech bubble appears for a few seconds
+  if (dodgeCount === 8) {
+    const bubble = $("#speech-bubble");
+    bubble.classList.add("show");
+    setTimeout(() => bubble.classList.remove("show"), 3500);
+  }
+  // more attempts: the Yes button grows to look more appealing
+  if (dodgeCount === 13) btnYes.classList.add("bigger");
+  if (dodgeCount === 20) btnYes.classList.add("biggest");
+}
+
+/* --- Desktop: dodge when the cursor gets close --- */
+document.addEventListener("mousemove", (e) => {
+  if (surrendered || !$("#screen-question").classList.contains("active")) return;
+  const r = btnNo.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  if (Math.hypot(e.clientX - cx, e.clientY - cy) < dodgeRadius) dodge();
+});
+
+/* --- Mobile: dodge when a finger lands near the button.
+       touchstart fires before click, so moving the button here means
+       the tap "misses" — playful, and the click never registers. --- */
+document.addEventListener("touchstart", (e) => {
+  if (surrendered || !$("#screen-question").classList.contains("active")) return;
+  const t = e.touches[0];
+  const r = btnNo.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  if (Math.hypot(t.clientX - cx, t.clientY - cy) < dodgeRadius) dodge();
+}, { passive: true });
+
+/* --- If No is somehow actually clicked --- */
+btnNo.addEventListener("click", () => {
+  if (surrendered) {
+    // "I changed my mind." — continue happily, same as Yes
+    celebrate();
+    return;
+  }
+
+  noClicks++;
+  playClick();
+
+  if (noClicks >= 3) {
+    // Third No: stop dodging, be gracious, offer the friendly out
+    surrendered = true;
+    btnNo.textContent = "I changed my mind.";
+    btnNo.style.transform = "none";
+    btnNo.style.background = "linear-gradient(180deg, #ffc9dd, #f9a8c7)";
+    return;
+  }
+
+  // Rounds 1–2: fade to "I'll ask one more time..." then re-ask, harder
+  showScreen("#screen-again");
+  setTimeout(() => {
+    dodgeRadius += 40;                 // bigger personal-space bubble
+    dodgeCount = 0;                    // reset escalation for the new round
+    $("#speech-bubble").classList.remove("show");
+    // Reset the No button back to its home slot in the row
+    btnNo.classList.remove("dodging");
+    btnNo.style.left = btnNo.style.top = "";
+    btnNo.style.transform = "none";
+    showScreen("#screen-question");
+  }, 1800);
+});
+
+/* ============================================================
+   5. BLUSH ON YES HOVER (and touch)
+   ============================================================ */
+function setBlush(on) {
+  $("#char-question").classList.toggle("blushing", on);
+}
+btnYes.addEventListener("mouseenter", () => setBlush(true));
+btnYes.addEventListener("mouseleave", () => setBlush(false));
+btnYes.addEventListener("touchstart", () => setBlush(true), { passive: true });
+
+/* ============================================================
+   6. YES! — CONFETTI, HEARTS, SOUND, CELEBRATION SCREEN
+   ============================================================ */
+btnYes.addEventListener("click", celebrate);
+
+function celebrate() {
+  playCelebration();
+  showScreen("#screen-yes");
+  // Hide the runaway No button if it was mid-dodge
+  btnNo.style.display = "none";
+  launchConfetti();
+  launchHearts();
+}
+
+/* Hearts that float up from the bottom of the screen */
+function launchHearts() {
+  const symbols = ["🩷", "💖", "💗", "💕", "✨"];
+  let launched = 0;
+  const timer = setInterval(() => {
+    const h = document.createElement("div");
+    h.className = "celebrate-heart";
+    h.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+    h.style.left = rand(2, 94) + "vw";
+    h.style.fontSize = rand(1.4, 3) + "rem";
+    h.style.setProperty("--dur", rand(2.5, 4.5) + "s");
+    h.style.setProperty("--spin", rand(-180, 180) + "deg");
+    document.body.appendChild(h);
+    h.addEventListener("animationend", () => h.remove());
+    if (++launched >= 40) clearInterval(timer);
+  }, 120);
+}
+
+/* ============================================================
+   7. CONFETTI — lightweight canvas particle system
+   ============================================================ */
+const canvas = $("#confetti-canvas");
+const ctx2d = canvas.getContext("2d");
+let confetti = [];
+let confettiRunning = false;
+
+function sizeCanvas() {
+  canvas.width  = window.innerWidth  * devicePixelRatio;
+  canvas.height = window.innerHeight * devicePixelRatio;
+  ctx2d.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+window.addEventListener("resize", sizeCanvas);
+sizeCanvas();
+
+const CONFETTI_COLORS = ["#ff9ec4", "#ffd3e2", "#b8e0ff", "#fff2a8", "#d5c4ff", "#ffffff", "#ffb3cf"];
+
+function launchConfetti() {
+  // Two bursts from the bottom corners + a center pop
+  const bursts = [
+    { x: window.innerWidth * 0.15, y: window.innerHeight * 0.9 },
+    { x: window.innerWidth * 0.85, y: window.innerHeight * 0.9 },
+    { x: window.innerWidth * 0.5,  y: window.innerHeight * 0.55 },
+  ];
+  bursts.forEach((b) => {
+    for (let i = 0; i < 60; i++) {
+      const angle = rand(-Math.PI * 0.85, -Math.PI * 0.15); // mostly upward
+      const speed = rand(6, 14);
+      confetti.push({
+        x: b.x, y: b.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        size: rand(5, 11),
+        color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+        rot: rand(0, Math.PI * 2),
+        rotSpeed: rand(-0.25, 0.25),
+        life: rand(120, 220),        // frames until it fades out
+        shape: Math.random() < 0.3 ? "heart" : "rect",
+      });
+    }
+  });
+  if (!confettiRunning) { confettiRunning = true; requestAnimationFrame(confettiFrame); }
+}
+
+function confettiFrame() {
+  ctx2d.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  confetti = confetti.filter((p) => p.life > 0 && p.y < window.innerHeight + 40);
+
+  for (const p of confetti) {
+    p.vy += 0.22;                 // gravity
+    p.vx *= 0.99;                 // air drag
+    p.x += p.vx; p.y += p.vy;
+    p.rot += p.rotSpeed;
+    p.life--;
+
+    ctx2d.save();
+    ctx2d.translate(p.x, p.y);
+    ctx2d.rotate(p.rot);
+    ctx2d.globalAlpha = Math.min(1, p.life / 40);   // fade at end of life
+    ctx2d.fillStyle = p.color;
+    if (p.shape === "heart") {
+      // teeny two-circle-and-triangle heart
+      const s = p.size / 2;
+      ctx2d.beginPath();
+      ctx2d.arc(-s / 2, -s / 3, s / 1.6, 0, Math.PI * 2);
+      ctx2d.arc( s / 2, -s / 3, s / 1.6, 0, Math.PI * 2);
+      ctx2d.moveTo(-s, 0); ctx2d.lineTo(0, s * 1.2); ctx2d.lineTo(s, 0);
+      ctx2d.fill();
+    } else {
+      ctx2d.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+    }
+    ctx2d.restore();
+  }
+
+  if (confetti.length > 0) {
+    requestAnimationFrame(confettiFrame);
+  } else {
+    confettiRunning = false;
+    ctx2d.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  }
+}
+</script>
+</body>
+</html>
