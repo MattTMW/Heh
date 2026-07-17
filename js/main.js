@@ -28,7 +28,7 @@ document.querySelectorAll(".char-img").forEach((img) => {
 /* ============================================================
    FLOATING BACKGROUND HEARTS + SPARKLES
    ============================================================ */
-const DECOR = ["🩷", "💗", "💜", "💕", "✨", "⭐", "🌸", "💖", "💜", "✨"];
+const DECOR = ["💜", "🩷", "💜", "💗", "✨", "⭐", "🌸", "💜", "💖", "✨"];
 function spawnFloaty() {
   const el = document.createElement("div");
   const symbol = DECOR[Math.floor(Math.random() * DECOR.length)];
@@ -106,7 +106,7 @@ function celebrate() {
 
 /* Hearts that float up from the bottom of the screen */
 function launchHearts() {
-  const symbols = ["🩷", "💖", "💗", "💜", "💕", "✨"];
+  const symbols = ["💜", "💖", "💜", "🩷", "💕", "✨"];
   let launched = 0;
   const timer = setInterval(() => {
     const h = document.createElement("div");
