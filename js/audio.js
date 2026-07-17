@@ -33,14 +33,23 @@ function playTone(freq, startDelay, duration, type = "sine", volume = 0.18) {
 function playPop() { playTone(rand(500, 700), 0, 0.12, "triangle", 0.12); } // dodge boing
 function playClick() { playTone(880, 0, 0.1, "sine", 0.1); }                  // button tap
 
-function playCelebration() {
-  // Prefer the real file if it loaded successfully
-  const audio = $("#celebration-audio");
-  if (audio && audio.readyState >= 2) {
-    audio.play().catch(() => playChimeFallback());
-  } else {
-    playChimeFallback();
+/* Try the real mp3 first, generated fallback only if playback fails.
+   QUIRK: never gate on audio.readyState — mobile browsers don't preload
+   media, so readyState stays 0 there even when the file exists. play()
+   inside the user's tap loads AND plays; it only rejects if the file is
+   truly missing/unplayable, which is when the fallback should fire. */
+function playMediaWithFallback(audio, fallback) {
+  if (!audio) { fallback(); return; }
+  const attempt = audio.play();
+  if (attempt && attempt.catch) {
+    attempt.catch(() => fallback());
+  } else if (audio.error) {
+    fallback();
   }
+}
+
+function playCelebration() {
+  playMediaWithFallback($("#celebration-audio"), playChimeFallback);
 }
 function playChimeFallback() {
   // A happy little ascending arpeggio (C-E-G-C) as the placeholder
@@ -50,12 +59,7 @@ function playChimeFallback() {
 
 /* Prefer assets/breh.mp3; fall back to a sad little descending "wah wah" */
 function playSad() {
-  const audio = $("#sad-audio");
-  if (audio && audio.readyState >= 2) {
-    audio.play().catch(() => playSadFallback());
-  } else {
-    playSadFallback();
-  }
+  playMediaWithFallback($("#sad-audio"), playSadFallback);
 }
 function playSadFallback() {
   [392, 349.23, 311.13].forEach((f, i) => playTone(f, i * 0.4, 0.55, "triangle", 0.14));
