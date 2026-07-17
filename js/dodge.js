@@ -44,29 +44,26 @@ function dodge() {
   const bw = btnNo.offsetWidth, bh = btnNo.offsetHeight;
   const pad = 12;
 
-  // Occasionally swap places with the Yes button instead (fun!)
-  if (dodgeCount > 2 && Math.random() < 0.18) {
-    const yesRect = btnYes.getBoundingClientRect();
-    btnNo.style.left = yesRect.left + "px";
-    btnNo.style.top = yesRect.top + "px";
-    playPop();
-    afterDodge();
-    return;
-  }
-
-  // Pick a random spot, retrying a few times to avoid the Yes button
+  // Pick a random spot that NEVER overlaps the Yes button: a mid-tap
+  // dodge must not leave Yes under her finger. Among the candidates,
+  // keep the one farthest from Yes as a guaranteed fallback.
   const yesRect = btnYes.getBoundingClientRect();
-  let x, y;
-  for (let tries = 0; tries < 12; tries++) {
+  const yesCx = yesRect.left + yesRect.width / 2;
+  const yesCy = yesRect.top + yesRect.height / 2;
+  const margin = 40; // clearance around Yes, beyond mere non-overlap
+  let x, y, bestX, bestY, bestDist = -1;
+  for (let tries = 0; tries < 40; tries++) {
     x = rand(pad, window.innerWidth - bw - pad);
     y = rand(pad, window.innerHeight - bh - pad);
     const overlapsYes =
-      x < yesRect.right + 20 && x + bw > yesRect.left - 20 &&
-      y < yesRect.bottom + 20 && y + bh > yesRect.top - 20;
-    if (!overlapsYes) break;
+      x < yesRect.right + margin && x + bw > yesRect.left - margin &&
+      y < yesRect.bottom + margin && y + bh > yesRect.top - margin;
+    const dist = Math.hypot(x + bw / 2 - yesCx, y + bh / 2 - yesCy);
+    if (dist > bestDist) { bestDist = dist; bestX = x; bestY = y; }
+    if (!overlapsYes) { bestX = x; bestY = y; break; }
   }
-  btnNo.style.left = x + "px";
-  btnNo.style.top = y + "px";
+  btnNo.style.left = bestX + "px";
+  btnNo.style.top = bestY + "px";
 
   // Occasionally shrink a bit / rotate a little for extra silliness
   const scale = Math.random() < 0.3 ? rand(0.78, 0.9) : 1;
@@ -80,13 +77,15 @@ function dodge() {
 /* Escalating reactions as she keeps trying to press No:
    every 2nd dodge shows the next speech-bubble prompt. */
 function afterDodge() {
+  // Yes grows first — showPrompt's LAST CHANCE branch (dodge 8) resets
+  // the growth, so it must run after any classList.add of this tick
+  if (dodgeCount === 4) btnYes.classList.add("bigger");
+  if (dodgeCount === 6) btnYes.classList.add("biggest");
+
   if (dodgeCount % 2 === 0) {
     const idx = dodgeCount / 2 - 1;
     if (idx < NO_PROMPTS.length) showPrompt(idx);
   }
-  // the Yes button grows to look more appealing along the way
-  if (dodgeCount === 4) btnYes.classList.add("bigger");
-  if (dodgeCount === 8) btnYes.classList.add("biggest");
 }
 
 let promptTimer = null;
@@ -100,10 +99,13 @@ function showPrompt(idx) {
     // LAST CHANCE: the bubble stays, and No stops dodging —
     // if she presses it now, she really means it.
     surrendered = true;
-    // Put the button back in its home slot next to Yes
+    // Put the button back in its home slot next to Yes, and shrink
+    // Yes back to normal: grown-Yes visually overflows its layout box
+    // and would sit nearly touching No — a mis-tap waiting to happen.
     btnNo.classList.remove("dodging");
     btnNo.style.left = btnNo.style.top = "";
     btnNo.style.transform = "none";
+    btnYes.classList.remove("bigger", "biggest");
   } else {
     promptTimer = setTimeout(() => bubble.classList.remove("show"), 2600);
   }
