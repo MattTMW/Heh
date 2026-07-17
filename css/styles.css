@@ -6,6 +6,7 @@
      1  .screen            the four full-viewport screens
      50 #btn-no.dodging    the runaway No button
      60 .celebrate-heart   hearts rising on celebration
+     62 .peek-char         chiikawa peeking from screen edges
      65 .envelope.floating the drifting envelope
      70 #confetti-canvas   confetti (pointer-events: none)
      90 .letter-overlay    full-screen letter viewer
@@ -809,6 +810,25 @@ body.sad #bg-decor {
   inset: 0;
   pointer-events: none;
   z-index: 70;
+}
+
+/* ==========================================================
+   6b2. PEEKING CHIIKAWA — slides in from a random screen edge
+   every so often on the celebration screen (driven by main.js,
+   which sets left/top/transform inline). pointer-events: none so
+   it can never block the envelope chase or the gallery.
+   ========================================================== */
+.peek-char {
+  position: fixed;
+  left: -9999px;
+  /* parked off-screen between peeks */
+  top: 0;
+  width: min(30vw, 130px);
+  height: auto;
+  z-index: 62;
+  pointer-events: none;
+  display: none;
+  filter: drop-shadow(0 6px 12px rgba(154, 99, 212, 0.3));
 }
 
 /* ==========================================================

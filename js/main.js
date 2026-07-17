@@ -102,6 +102,90 @@ function celebrate() {
   buildPhotoGallery();
   // Give her a beat to spot the envelope, then it flies off!
   setTimeout(startFloating, 1200);
+  startPeeking();
+}
+
+/* ============================================================
+   PEEKING CHIIKAWA — every so often on the celebration screen,
+   a chiikawa slides in from a random edge, watches for a moment,
+   then slips back out. Purely decorative: pointer-events none,
+   z-index below the floating envelope, skipped entirely with
+   reduced motion or if no usable image exists.
+   ============================================================ */
+const peekChar = $("#peek-char");
+let peekBroken = false;
+
+/* assets/chiikawa_peek.png → chiikawa_happy.png → give up quietly */
+peekChar.addEventListener("error", () => {
+  const fallback = peekChar.dataset.fallback;
+  if (fallback && peekChar.getAttribute("src") !== fallback) {
+    peekChar.src = fallback;
+  } else {
+    peekBroken = true;
+  }
+});
+if (peekChar.complete && peekChar.naturalWidth === 0) {
+  peekChar.src = peekChar.dataset.fallback;
+}
+
+let peeksStarted = false;
+function startPeeking() {
+  if (peeksStarted || reducedMotion) return;
+  peeksStarted = true;
+  schedulePeek();
+}
+
+function schedulePeek() {
+  setTimeout(doPeek, rand(5000, 9000));
+}
+
+function doPeek() {
+  // Only peek while the celebration screen is up and the letter isn't open
+  if (peekBroken || peekChar.naturalWidth === 0 ||
+    !$("#screen-yes").classList.contains("active") ||
+    $("#letter-overlay").classList.contains("show")) {
+    schedulePeek();
+    return;
+  }
+
+  peekChar.style.display = "block";
+  peekChar.style.transition = "none";
+  const w = peekChar.offsetWidth || 120;
+  const h = peekChar.offsetHeight || 120;
+
+  // Pick an edge and how far to lean in
+  const edge = ["left", "right", "top", "bottom"][Math.floor(rand(0, 4))];
+  let x, y, inX = 0, inY = 0, rot = 0;
+  if (edge === "left") {
+    x = -w; y = rand(60, window.innerHeight - h - 100);
+    inX = w * 0.62; rot = rand(8, 20);
+  } else if (edge === "right") {
+    x = window.innerWidth; y = rand(60, window.innerHeight - h - 100);
+    inX = -w * 0.62; rot = -rand(8, 20);
+  } else if (edge === "top") {
+    x = rand(16, window.innerWidth - w - 16); y = -h;
+    inY = h * 0.6; rot = rand(-10, 10);
+  } else {
+    x = rand(16, window.innerWidth - w - 16); y = window.innerHeight;
+    inY = -h * 0.62; rot = rand(-10, 10);
+  }
+
+  peekChar.style.left = x + "px";
+  peekChar.style.top = y + "px";
+  peekChar.style.transform = `translate(0, 0) rotate(${rot}deg)`;
+  peekChar.getBoundingClientRect(); // flush so the slide-in animates
+
+  peekChar.style.transition = "transform 0.7s cubic-bezier(.34, 1.3, .64, 1)";
+  peekChar.style.transform = `translate(${inX}px, ${inY}px) rotate(${rot}deg)`;
+
+  // Watch for a moment... then slip back out
+  setTimeout(() => {
+    peekChar.style.transform = `translate(0, 0) rotate(${rot}deg)`;
+    setTimeout(() => {
+      peekChar.style.display = "none";
+      schedulePeek();
+    }, 750);
+  }, 1700);
 }
 
 /* Hearts that float up from the bottom of the screen */

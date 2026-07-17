@@ -38,6 +38,10 @@
                                     letter, shown when she catches
                                     the envelope. (.jpeg/.png work.)
 
+       assets/chiikawa_peek.png   → peeks in from the screen edges
+                                    on the celebration screen (falls
+                                    back to the happy image)
+
      If the files exist they are used automatically; if not, the
      placeholders kick in. No code changes needed.
      ============================================================ -->
@@ -88,7 +92,7 @@
       </svg>
     </div>
 
-    <button id="btn-continue" class="btn btn-continue">Continue</button>
+    <button id="btn-continue" class="btn btn-continue">continue...</button>
   </section>
 
   <!-- ==========================================================
@@ -168,7 +172,7 @@
      ========================================================== -->
   <section id="screen-yes" class="screen screen-yes" aria-label="Celebration">
     <h1>HOORAYY!! 🩷</h1>
-    <p class="subtitle">Here's a little collage of my favorite photos of us (and some of you heh) so far :D</p>
+    <p class="subtitle">Here's a little collage of our photos (and some of you heh) :D</p>
 
     <div class="char-wrap" id="char-happy">
       <img class="char-img" src="assets/chiikawa_happy.png" alt="A cute character celebrating joyfully">
@@ -212,6 +216,11 @@
     <!-- Filled by gallery.js from assets/photos/dateN.* -->
     <div class="photo-gallery" id="photo-gallery"></div>
   </section>
+
+  <!-- Chiikawa that peeks in from the screen edges during the
+     celebration (positioned + animated by main.js) -->
+  <img id="peek-char" class="peek-char" src="assets/chiikawa_peek.png"
+    data-fallback="assets/chiikawa_happy.png" alt="" aria-hidden="true">
 
   <!-- Full-screen overlay that shows the letter once the envelope opens -->
   <div class="letter-overlay" id="letter-overlay" role="dialog" aria-label="A letter for you">
