@@ -1,0 +1,868 @@
+/* ============================================================
+   An Important Question 🩷 — styles
+   ------------------------------------------------------------
+   Z-INDEX LAYERING CONTRACT (keep in sync with any new layers):
+     0  #bg-decor          floating background hearts/sparkles
+     1  .screen            the four full-viewport screens
+     50 #btn-no.dodging    the runaway No button
+     60 .celebrate-heart   hearts rising on celebration
+     65 .envelope.floating the drifting envelope
+     70 #confetti-canvas   confetti (pointer-events: none)
+     90 .letter-overlay    full-screen letter viewer
+   ============================================================ */
+
+/* ==========================================================
+   0. DESIGN TOKENS — shared palette, spacing scale, motion
+   ========================================================== */
+:root {
+  /* palette */
+  --pink-primary: #e2749b;
+  /* headings, key accents */
+  --pink-strong: #f26d9d;
+  /* Yes button bottom */
+  --pink-soft: #f78fb5;
+  /* Continue button bottom, envelope flap */
+  --text-main: #7a5c6b;
+  --text-muted: #9b7e8d;
+
+  /* spacing scale — use these instead of ad-hoc px */
+  --space-1: 8px;
+  --space-2: 14px;
+  --space-3: 22px;
+  --space-4: 36px;
+
+  /* motion */
+  --spring: cubic-bezier(.34, 1.56, .64, 1);
+  --spring-gentle: cubic-bezier(.34, 1.3, .64, 1);
+  --fade: cubic-bezier(.4, 0, .2, 1);
+
+  /* shadows */
+  --shadow-btn: 0 6px 16px rgba(226, 116, 155, 0.35),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+  --shadow-btn-hover: 0 10px 22px rgba(226, 116, 155, 0.45),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 4px 12px rgba(226, 116, 155, 0.25);
+}
+
+/* ==========================================================
+   1. BASE / RESET
+   ========================================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  /* screens are full-viewport; no scrolling */
+  font-family: "Trebuchet MS", "Comic Sans MS", "Segoe UI", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  /* prevents double-tap zoom on buttons */
+}
+
+/* Soft pastel gradient background */
+body {
+  background: linear-gradient(160deg, #ffe9f3 0%, #fff6fb 35%, #e8f4ff 70%, #fdeffa 100%);
+  color: #7a5c6b;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ==========================================================
+   2. FLOATING BACKGROUND DECOR (hearts + sparkles)
+   Elements are created by JS and float upward forever.
+   ========================================================== */
+#bg-decor {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.floaty {
+  position: absolute;
+  bottom: -8vh;
+  animation: floatUp linear forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg) scale(1);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.9;
+  }
+
+  50% {
+    transform: translateY(-55vh) translateX(var(--drift)) rotate(15deg) scale(1.1);
+  }
+
+  100% {
+    transform: translateY(-115vh) translateX(calc(var(--drift) * -1)) rotate(-10deg) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* Twinkling sparkle variant */
+.sparkle {
+  animation: floatUp linear forwards, twinkle 1.2s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.8) drop-shadow(0 0 6px #fff2a8);
+  }
+}
+
+/* ==========================================================
+   3. SCREENS + FADE TRANSITIONS
+   Each "screen" is a full-viewport flex column. Only the one
+   with .active is visible; opacity handles the cross-fade.
+   ========================================================== */
+.screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.55s var(--fade), visibility 0.55s;
+  z-index: 1;
+}
+
+.screen.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 6vw, 2.4rem);
+  color: var(--pink-primary);
+  text-shadow: 0 2px 0 #ffffffaa;
+  line-height: 1.35;
+  /* wide enough to avoid orphaned single words, never wider than the
+     phone; text-wrap: balance evens the lines where supported */
+  max-width: min(92vw, 24ch);
+  text-wrap: balance;
+}
+
+.subtitle {
+  font-size: clamp(1.05rem, 4.5vw, 1.4rem);
+  color: var(--text-muted);
+  max-width: min(92vw, 40ch);
+  text-wrap: balance;
+}
+
+/* ==========================================================
+   4. BUTTONS — big, round, touch-friendly (min 56px tall)
+   ========================================================== */
+.btn {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: clamp(1.1rem, 4.5vw, 1.35rem);
+  padding: 16px 40px;
+  min-height: 56px;
+  min-width: 130px;
+  border-radius: 999px;
+  color: #fff;
+  box-shadow: var(--shadow-btn);
+  transition: transform 0.25s var(--spring),
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+
+.btn:active {
+  transform: scale(0.94);
+}
+
+.btn-continue {
+  background: linear-gradient(180deg, #ffb3cf, #f78fb5);
+}
+
+.btn-yes {
+  background: linear-gradient(180deg, #ff9ec4, #f26d9d);
+}
+
+.btn-no {
+  background: linear-gradient(180deg, #b8c8f2, #93a9e8);
+  box-shadow: 0 6px 16px rgba(147, 169, 232, 0.4),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+}
+
+.btn-continue:hover,
+.btn-yes:hover {
+  transform: scale(1.07);
+  box-shadow: var(--shadow-btn-hover);
+}
+
+/* Gentle idle bounce so the Yes button looks inviting */
+.btn-yes {
+  animation: gentleBounce 2.2s ease-in-out infinite;
+}
+
+@keyframes gentleBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.btn-yes:hover {
+  animation: none;
+}
+
+/* hover scale wins over bounce */
+
+/* Continue button fades in ~1s after the intro screen shows */
+#btn-continue {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(.34, 1.56, .64, 1);
+  pointer-events: none;
+}
+
+#btn-continue.revealed {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Container for Yes / No — No starts here, then goes fixed to dodge */
+.choices {
+  display: flex;
+  gap: 26px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  min-height: 80px;
+}
+
+/* Once dodging begins, JS switches the No button to fixed positioning
+   and animates it around the viewport with these transitions. */
+#btn-no.dodging {
+  position: fixed;
+  z-index: 50;
+  transition: left 0.28s cubic-bezier(.34, 1.4, .64, 1),
+    top 0.28s cubic-bezier(.34, 1.4, .64, 1),
+    transform 0.28s ease;
+}
+
+/* Yes button "encouragement" growth after many dodge attempts */
+#btn-yes.bigger {
+  scale: 1.18;
+}
+
+#btn-yes.biggest {
+  scale: 1.35;
+}
+
+#btn-yes {
+  transition: scale 0.5s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+/* ==========================================================
+   5. CHARACTER (image with built-in SVG placeholder fallback)
+   ========================================================== */
+.char-wrap {
+  position: relative;
+  width: min(46vw, 210px);
+  animation: charBob 3s ease-in-out infinite;
+}
+
+@keyframes charBob {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.5deg);
+  }
+
+  50% {
+    transform: translateY(-8px) rotate(1.5deg);
+  }
+}
+
+.char-wrap img,
+.char-wrap svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 8px 14px rgba(226, 116, 155, 0.25));
+}
+
+/* Real image files are hidden until JS confirms they loaded */
+.char-wrap .char-img {
+  display: none;
+}
+
+.char-wrap .char-img.loaded {
+  display: block;
+}
+
+.char-wrap .char-img.loaded+.char-placeholder {
+  display: none;
+}
+
+/* Blush circles inside the placeholder SVG — shown on Yes hover */
+.blush {
+  opacity: 0.45;
+  transition: opacity 0.3s ease;
+}
+
+.char-wrap.blushing .blush {
+  opacity: 1;
+  animation: blushPulse 0.9s ease-in-out infinite;
+}
+
+@keyframes blushPulse {
+
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Whole character wiggles happily while blushing */
+.char-wrap.blushing {
+  animation: charBob 0.6s ease-in-out infinite;
+}
+
+/* The question screen reserves headroom above the character so the
+   bubble pops into its own space instead of covering the headline */
+#char-question {
+  margin-top: clamp(24px, 7vh, 56px);
+}
+
+/* Speech bubble (text set by dodge.js NO_PROMPTS) */
+.speech-bubble {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translate(-50%, 10px) scale(0.8);
+  background: #ffffff;
+  color: var(--pink-primary);
+  font-weight: bold;
+  font-size: clamp(0.95rem, 3.8vw, 1.1rem);
+  line-height: 1.3;
+  padding: 10px 18px;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(180, 130, 160, 0.25);
+  /* single line when it fits, graceful wrap on narrow phones */
+  width: max-content;
+  max-width: min(86vw, 320px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s var(--spring);
+}
+
+.speech-bubble::after {
+  /* little tail under the bubble */
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 9px solid transparent;
+  border-top-color: #ffffff;
+  border-bottom: none;
+}
+
+.speech-bubble.show {
+  opacity: 1;
+  transform: translate(-50%, -100%) scale(1);
+}
+
+/* ==========================================================
+   6. CELEBRATION SCREEN
+   ========================================================== */
+#screen-yes h1 {
+  font-size: clamp(2.2rem, 10vw, 3.6rem);
+  animation: yayPop 0.6s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+@keyframes yayPop {
+  0% {
+    transform: scale(0);
+  }
+
+  70% {
+    transform: scale(1.15);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Row of bouncing hearts under the celebration text — kept small so
+   they read as a divider, not a competing focal point */
+.bounce-hearts {
+  display: flex;
+  gap: 10px;
+  font-size: 1.5rem;
+}
+
+.bounce-hearts span {
+  animation: heartBounce 0.9s ease-in-out infinite;
+}
+
+.bounce-hearts span:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.bounce-hearts span:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+.bounce-hearts span:nth-child(4) {
+  animation-delay: 0.36s;
+}
+
+.bounce-hearts span:nth-child(5) {
+  animation-delay: 0.48s;
+}
+
+@keyframes heartBounce {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-16px) scale(1.15);
+  }
+}
+
+/* Hearts that float up from the bottom on celebration */
+.celebrate-heart {
+  position: fixed;
+  bottom: -60px;
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 60;
+  animation: riseUp var(--dur) ease-in forwards;
+}
+
+@keyframes riseUp {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-120vh) rotate(var(--spin));
+    opacity: 0;
+  }
+}
+
+/* The celebration screen can be taller than the viewport once photos
+   are added, so let it scroll instead of clipping. Content starts from
+   the top (centering + overflow would push the title/gif out of reach)
+   and nothing is allowed to squish. */
+.screen-yes.active {
+  justify-content: flex-start;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+  /* denser screen than the others — tighter rhythm keeps the eye
+     moving down: title → character → envelope → photos */
+  gap: 16px;
+}
+
+.screen-yes>* {
+  flex-shrink: 0;
+}
+
+/* Smaller character here: it's a co-star, not the headline act */
+.screen-yes .char-wrap {
+  width: min(36vw, 165px);
+}
+
+/* Grid of memory photos on the celebration screen */
+.photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: min(92vw, 480px);
+  margin-top: var(--space-2);
+}
+
+.photo-gallery img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(226, 116, 155, 0.25);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.photo-gallery img.loaded {
+  opacity: 1;
+}
+
+/* ==========================================================
+   6a. THE SAD SCREEN — everything goes grey and droopy
+   ========================================================== */
+body.sad {
+  background: linear-gradient(160deg, #eef0f5 0%, #f5f6fa 40%, #e6e9f1 100%);
+}
+
+/* No cheerful floating hearts while sad */
+body.sad #bg-decor {
+  display: none;
+}
+
+.screen-sad h1 {
+  color: #8a93a8;
+  text-shadow: none;
+}
+
+.screen-sad .subtitle {
+  color: #9aa3b5;
+}
+
+/* Slow, droopy sway instead of the happy bob */
+.sad-wrap {
+  animation: sadSway 4.5s ease-in-out infinite;
+  filter: grayscale(0.25);
+}
+
+@keyframes sadSway {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1deg);
+  }
+
+  50% {
+    transform: translateY(5px) rotate(1deg);
+  }
+}
+
+/* ==========================================================
+   6b. THE ENVELOPE + LETTER OVERLAY
+   A cute sealed envelope sits on the celebration screen.
+   Tapping it lifts the flap, slides the letter up, then a
+   full-screen overlay shows the handwritten letter photo.
+   ========================================================== */
+.envelope-hint {
+  font-size: clamp(0.9rem, 3.6vw, 1.05rem);
+  color: #b06a8c;
+  font-weight: bold;
+  opacity: 0.85;
+  margin-top: var(--space-1);
+}
+
+.envelope {
+  position: relative;
+  width: 170px;
+  height: 115px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: envelopeWiggle 2.4s ease-in-out infinite;
+  filter: drop-shadow(0 8px 14px rgba(226, 116, 155, 0.3));
+}
+
+/* While floating, the envelope escapes the page flow and drifts
+   around the whole screen (JS moves it via left/top). */
+.envelope.floating {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 65;
+}
+
+/* Once tapped ("caught"), it glides smoothly to screen center */
+.envelope.caught {
+  transition: left 0.6s cubic-bezier(.34, 1.3, .64, 1),
+    top 0.6s cubic-bezier(.34, 1.3, .64, 1);
+  animation: none;
+}
+
+@keyframes envelopeWiggle {
+
+  0%,
+  100% {
+    transform: rotate(-2deg) translateY(0);
+  }
+
+  50% {
+    transform: rotate(2deg) translateY(-5px);
+  }
+}
+
+.envelope.open {
+  animation: none;
+}
+
+/* Back of the envelope */
+.env-back {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #ffc9dd, #f9a8c7);
+  border-radius: 10px;
+}
+
+/* The little letter peeking inside */
+.env-letter {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 12px;
+  bottom: 10px;
+  background: #fffdf7;
+  border-radius: 6px;
+  transition: transform 0.55s cubic-bezier(.34, 1.3, .64, 1) 0.25s;
+}
+
+.envelope.open .env-letter {
+  transform: translateY(-58px);
+}
+
+/* Front pocket (bottom half, drawn as two folded triangles) */
+.env-front {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background:
+    linear-gradient(115deg, #ffb9d3 50%, transparent 50.5%) left/51% 100% no-repeat,
+    linear-gradient(245deg, #ffb9d3 50%, transparent 50.5%) right/51% 100% no-repeat,
+    linear-gradient(0deg, #ffaecd 42%, transparent 42.5%);
+  pointer-events: none;
+}
+
+/* Top flap — rotates open around its top edge */
+.env-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 85px solid transparent;
+  border-right: 85px solid transparent;
+  border-top: 62px solid #f78fb5;
+  transform-origin: top center;
+  transition: transform 0.45s ease;
+  z-index: 2;
+}
+
+.envelope.open .env-flap {
+  transform: rotateX(180deg);
+  z-index: 0;
+  transition: transform 0.45s ease, z-index 0s 0.3s;
+}
+
+/* Heart seal on the flap point */
+.env-seal {
+  position: absolute;
+  top: 46px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.6rem;
+  z-index: 3;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.envelope.open .env-seal {
+  opacity: 0;
+  transform: translateX(-50%) scale(1.6);
+}
+
+/* --- Full-screen letter overlay --- */
+.letter-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(122, 74, 96, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.45s ease, visibility 0.45s;
+}
+
+.letter-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.letter-paper {
+  position: relative;
+  background: #fffdf7;
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(60, 20, 40, 0.35);
+  max-width: min(94vw, 540px);
+  max-height: 86vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px;
+  transform: scale(0.85) translateY(20px);
+  transition: transform 0.45s cubic-bezier(.34, 1.4, .64, 1);
+}
+
+.letter-overlay.show .letter-paper {
+  transform: scale(1) translateY(0);
+}
+
+.letter-paper img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.letter-paper img:not(.loaded) {
+  display: none;
+}
+
+/* Fallback note if letter.jpg isn't added yet */
+.letter-fallback {
+  display: none;
+  padding: 30px 18px;
+  color: #b06a8c;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.letter-paper.no-image .letter-fallback {
+  display: block;
+}
+
+/* Cute close button: pink candy bubble with a white rim, springs on
+   hover like everything else. 56px keeps it comfortably thumb-sized. */
+.letter-close {
+  position: sticky;
+  top: 0;
+  margin-left: auto;
+  display: block;
+  border: 3px solid #ffffff;
+  cursor: pointer;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #ffb3cf, var(--pink-soft));
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: bold;
+  box-shadow: var(--shadow-btn);
+  z-index: 2;
+  transition: transform 0.25s var(--spring);
+}
+
+.letter-close:hover {
+  transform: scale(1.08) rotate(8deg);
+}
+
+.letter-close:active {
+  transform: scale(0.92);
+}
+
+/* Confetti canvas sits above everything but never blocks taps */
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 70;
+}
+
+/* ==========================================================
+   6c. LANDSCAPE PHONES — everything shrinks to fit one screen
+   height; tap targets stay ≥56px.
+   ========================================================== */
+@media (orientation: landscape) and (max-height: 520px) {
+  .screen {
+    gap: var(--space-2);
+    padding: var(--space-2);
+  }
+
+  h1 {
+    font-size: clamp(1.1rem, 5vh, 1.6rem);
+    max-width: min(80vw, 34ch);
+  }
+
+  .subtitle {
+    font-size: clamp(0.9rem, 4vh, 1.1rem);
+  }
+
+  /* Character sized by viewport height so it never pushes the
+     buttons off-screen */
+  .char-wrap {
+    width: min(26vh, 140px);
+  }
+
+  #char-question {
+    margin-top: clamp(30px, 12vh, 60px);
+  }
+
+  .screen-yes.active {
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-3);
+  }
+
+  .screen-yes .char-wrap {
+    width: min(22vh, 120px);
+  }
+
+  /* Wider screen → three photo columns */
+  .photo-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: min(92vw, 640px);
+  }
+
+  .letter-paper {
+    max-height: 92vh;
+  }
+}
+
+/* ==========================================================
+   7. ACCESSIBILITY — calm everything down if requested
+   ========================================================== */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01s !important;
+    animation-iteration-count: 1 !important;
+  }
+}

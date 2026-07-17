@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <!-- Mobile-first: this will mostly be opened from a QR code on a phone -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>An Important Question 🩷</title>
+
+  <!-- ============================================================
+     ASSETS — REPLACE THESE WITH YOUR OWN FILES (optional!)
+     ------------------------------------------------------------
+     The page works out-of-the-box with a cute built-in placeholder
+     character and a generated chime sound. To use real artwork,
+     just put these files in the assets/ folder:
+
+       assets/chiikawa_idle.png   → intro + question screens
+       assets/chiikawa_happy.png  → celebration screen
+       assets/our_song.mp3        → plays (looping) once she says YES
+
+       assets/sad.gif             → shown on the sad screen if she
+                                    really says no (a .png/.jpg also
+                                    works — name it sad.gif anyway
+                                    or edit the src)
+       assets/breh.mp3            → played on the sad screen (e.g. a
+                                    voice memo of you going "breh")
+
+       assets/photos/date1.jpg ... assets/photos/date24.jpg
+                                  → memory photos on the celebration
+                                    screen. Numbered in order, named
+                                    .jpg/.jpeg/.png (case-insensitive).
+                                    Skipped numbers are left out —
+                                    no code changes needed.
+
+       assets/letter.jpg          → a photo/scan of your handwritten
+                                    letter, shown when she catches
+                                    the envelope. (.jpeg/.png work.)
+
+     If the files exist they are used automatically; if not, the
+     placeholders kick in. No code changes needed.
+     ============================================================ -->
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+  <!-- Floating hearts + sparkles live here (filled by JS) -->
+  <div id="bg-decor" aria-hidden="true"></div>
+
+  <!-- Confetti canvas for the YES celebration -->
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <!-- ==========================================================
+     SCREEN 1 — INTRO
+     ========================================================== -->
+  <section id="screen-intro" class="screen active" aria-label="Introduction">
+    <h1>Hallo Lynnetty! I have a REALLY important question...</h1>
+
+    <div class="char-wrap" id="char-intro">
+      <img class="char-img" src="assets/chiikawa_idle.png" alt="A cute character waiting nervously">
+
+      <!-- Built-in cute placeholder (generic round friend). Safe to
+         delete once you add your own image, but harmless to keep. -->
+      <svg class="char-placeholder" viewBox="0 0 200 200" role="img" aria-label="Cute placeholder character">
+        <!-- ears -->
+        <ellipse cx="62" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <ellipse cx="138" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <ellipse cx="62" cy="44" rx="11" ry="14" fill="#ffd3e2" />
+        <ellipse cx="138" cy="44" rx="11" ry="14" fill="#ffd3e2" />
+        <!-- body -->
+        <ellipse cx="100" cy="118" rx="72" ry="68" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <!-- little arms -->
+        <ellipse cx="34" cy="128" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <ellipse cx="166" cy="128" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <!-- eyes -->
+        <circle cx="74" cy="106" r="7" fill="#4a3540" />
+        <circle cx="126" cy="106" r="7" fill="#4a3540" />
+        <circle cx="76.5" cy="103.5" r="2.4" fill="#fff" />
+        <circle cx="128.5" cy="103.5" r="2.4" fill="#fff" />
+        <!-- blush (lights up when Yes is hovered) -->
+        <ellipse class="blush" cx="58" cy="126" rx="12" ry="7" fill="#ffb3c8" />
+        <ellipse class="blush" cx="142" cy="126" rx="12" ry="7" fill="#ffb3c8" />
+        <!-- tiny mouth -->
+        <path d="M92 126 Q100 133 108 126" fill="none" stroke="#4a3540" stroke-width="3" stroke-linecap="round" />
+      </svg>
+    </div>
+
+    <button id="btn-continue" class="btn btn-continue">Continue</button>
+  </section>
+
+  <!-- ==========================================================
+     SCREEN 2 — THE QUESTION
+     ========================================================== -->
+  <section id="screen-question" class="screen" aria-label="The question">
+    <h1 id="question-text">May I be your boyfriend? :o</h1>
+
+    <div class="char-wrap" id="char-question">
+      <!-- Text is set by dodge.js (NO_PROMPTS) before each show -->
+      <div class="speech-bubble" id="speech-bubble" aria-live="polite"></div>
+
+      <!-- Same idle image / placeholder as the intro -->
+      <img class="char-img" src="assets/chiikawa_idle.png" alt="A cute character asking hopefully">
+      <svg class="char-placeholder" viewBox="0 0 200 200" role="img" aria-label="Cute placeholder character">
+        <ellipse cx="62" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <ellipse cx="138" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <ellipse cx="62" cy="44" rx="11" ry="14" fill="#ffd3e2" />
+        <ellipse cx="138" cy="44" rx="11" ry="14" fill="#ffd3e2" />
+        <ellipse cx="100" cy="118" rx="72" ry="68" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <ellipse cx="34" cy="128" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <ellipse cx="166" cy="128" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <circle cx="74" cy="106" r="7" fill="#4a3540" />
+        <circle cx="126" cy="106" r="7" fill="#4a3540" />
+        <circle cx="76.5" cy="103.5" r="2.4" fill="#fff" />
+        <circle cx="128.5" cy="103.5" r="2.4" fill="#fff" />
+        <ellipse class="blush" cx="58" cy="126" rx="12" ry="7" fill="#ffb3c8" />
+        <ellipse class="blush" cx="142" cy="126" rx="12" ry="7" fill="#ffb3c8" />
+        <path d="M92 126 Q100 133 108 126" fill="none" stroke="#4a3540" stroke-width="3" stroke-linecap="round" />
+      </svg>
+    </div>
+
+    <div class="choices">
+      <button id="btn-yes" class="btn btn-yes">💖 Yes</button>
+      <button id="btn-no" class="btn btn-no">😔 No</button>
+    </div>
+  </section>
+
+  <!-- ==========================================================
+     SCREEN 3 — THE SAD SCREEN (she really said no 😔)
+     ========================================================== -->
+  <section id="screen-no" class="screen screen-sad" aria-label="Sad ending">
+    <h1>oh... okay 😔</h1>
+    <p class="subtitle">breh...</p>
+
+    <div class="char-wrap sad-wrap" id="char-sad">
+      <img class="char-img" src="assets/sad.gif" alt="A sad character">
+
+      <!-- Sad placeholder: droopy eyes, a lil tear, big frown -->
+      <svg class="char-placeholder" viewBox="0 0 200 200" role="img" aria-label="Sad placeholder character">
+        <ellipse cx="62" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <ellipse cx="138" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <ellipse cx="62" cy="44" rx="11" ry="14" fill="#e6e9f2" />
+        <ellipse cx="138" cy="44" rx="11" ry="14" fill="#e6e9f2" />
+        <ellipse cx="100" cy="118" rx="72" ry="68" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <!-- drooping arms -->
+        <ellipse cx="34" cy="140" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <ellipse cx="166" cy="140" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <!-- sad closed eyes (down-turned arcs) -->
+        <path d="M66 104 Q74 112 82 104" fill="none" stroke="#4a3540" stroke-width="4" stroke-linecap="round" />
+        <path d="M118 104 Q126 112 134 104" fill="none" stroke="#4a3540" stroke-width="4" stroke-linecap="round" />
+        <!-- a little tear -->
+        <ellipse cx="84" cy="118" rx="4" ry="6" fill="#9ec8f7" />
+        <!-- big frown -->
+        <path d="M90 136 Q100 127 110 136" fill="none" stroke="#4a3540" stroke-width="3" stroke-linecap="round" />
+      </svg>
+    </div>
+
+    <!-- A soft way back, so the story doesn't have to end here -->
+    <button id="btn-reconsider" class="btn btn-yes">Wait... I change my mind! 💗</button>
+  </section>
+
+  <!-- ==========================================================
+     SCREEN 4 — CELEBRATION
+     ========================================================== -->
+  <section id="screen-yes" class="screen screen-yes" aria-label="Celebration">
+    <h1>HOORAYY!! 🩷</h1>
+    <p class="subtitle">Here's a little collage of all our photos (and some of you heh) so far :D</p>
+
+    <div class="char-wrap" id="char-happy">
+      <img class="char-img" src="assets/chiikawa_happy.png" alt="A cute character celebrating joyfully">
+      <svg class="char-placeholder" viewBox="0 0 200 200" role="img"
+        aria-label="Cute placeholder character celebrating">
+        <ellipse cx="62" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <ellipse cx="138" cy="42" rx="22" ry="26" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <ellipse cx="62" cy="44" rx="11" ry="14" fill="#ffd3e2" />
+        <ellipse cx="138" cy="44" rx="11" ry="14" fill="#ffd3e2" />
+        <ellipse cx="100" cy="118" rx="72" ry="68" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3" />
+        <!-- arms raised in celebration -->
+        <ellipse cx="30" cy="92" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"
+          transform="rotate(-30 30 92)" />
+        <ellipse cx="170" cy="92" rx="13" ry="17" fill="#fff8f0" stroke="#8a6f7b" stroke-width="3"
+          transform="rotate(30 170 92)" />
+        <!-- happy closed eyes (^ ^) -->
+        <path d="M66 106 Q74 98 82 106" fill="none" stroke="#4a3540" stroke-width="4" stroke-linecap="round" />
+        <path d="M118 106 Q126 98 134 106" fill="none" stroke="#4a3540" stroke-width="4" stroke-linecap="round" />
+        <!-- permanent happy blush -->
+        <ellipse cx="58" cy="126" rx="12" ry="7" fill="#ffb3c8" opacity="0.9" />
+        <ellipse cx="142" cy="126" rx="12" ry="7" fill="#ffb3c8" opacity="0.9" />
+        <!-- big open smile -->
+        <path d="M86 124 Q100 140 114 124 Z" fill="#e2749b" stroke="#4a3540" stroke-width="3" stroke-linejoin="round" />
+      </svg>
+    </div>
+
+    <div class="bounce-hearts" aria-hidden="true">
+      <span>💖</span><span>✨</span><span>🩷</span><span>✨</span><span>💖</span>
+    </div>
+
+    <!-- A sealed envelope with the handwritten letter inside (assets/letter.jpg) -->
+    <p class="envelope-hint">psst... catch the letter to read it! 💌</p>
+    <button class="envelope" id="envelope" aria-label="Open the letter">
+      <span class="env-back"></span>
+      <span class="env-letter"></span>
+      <span class="env-front"></span>
+      <span class="env-flap"></span>
+      <span class="env-seal">💗</span>
+    </button>
+
+    <!-- Filled by gallery.js from assets/photos/dateN.* -->
+    <div class="photo-gallery" id="photo-gallery"></div>
+  </section>
+
+  <!-- Full-screen overlay that shows the letter once the envelope opens -->
+  <div class="letter-overlay" id="letter-overlay" role="dialog" aria-label="A letter for you">
+    <div class="letter-paper" id="letter-paper">
+      <button class="letter-close" id="letter-close" aria-label="Close the letter">✕</button>
+      <img id="letter-img" alt="A handwritten letter">
+      <p class="letter-fallback">
+        💌 The letter goes here!<br><br>
+        (Psst — save a photo of it as <b>letter.jpg</b> inside the
+        <b>assets</b> folder and it'll appear automatically.)
+      </p>
+    </div>
+  </div>
+
+  <audio id="celebration-audio" src="assets/our_song.mp3" preload="auto" loop></audio>
+  <audio id="sad-audio" src="assets/breh.mp3" preload="auto"></audio>
+
+  <!-- Classic scripts sharing global scope — order matters:
+     utils → audio → confetti → gallery → envelope → dodge → main -->
+  <script src="js/utils.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/confetti.js"></script>
+  <script src="js/gallery.js"></script>
+  <script src="js/envelope.js"></script>
+  <script src="js/dodge.js"></script>
+  <script src="js/main.js"></script>
+</body>
+
+</html>
