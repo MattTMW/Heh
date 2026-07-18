@@ -34,10 +34,6 @@
                                     Skipped numbers are left out —
                                     no code changes needed.
 
-       assets/letter.jpg          → a photo/scan of your handwritten
-                                    letter, shown when she catches
-                                    the envelope. (.jpeg/.png work.)
-
        assets/chiikawa_peek.png   → peeks in from the screen edges
                                     on the celebration screen (falls
                                     back to the happy image)
@@ -45,6 +41,11 @@
      If the files exist they are used automatically; if not, the
      placeholders kick in. No code changes needed.
      ============================================================ -->
+
+  <!-- Handwriting font for the letter (falls back to system cursive) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -226,12 +227,35 @@
   <div class="letter-overlay" id="letter-overlay" role="dialog" aria-label="A letter for you">
     <div class="letter-paper" id="letter-paper">
       <button class="letter-close" id="letter-close" aria-label="Close the letter">✕</button>
-      <img id="letter-img" alt="A handwritten letter">
-      <p class="letter-fallback">
-        💌 The letter goes here!<br><br>
-        (Psst — save a photo of it as <b>letter.jpg</b> inside the
-        <b>assets</b> folder and it'll appear automatically.)
-      </p>
+      <div class="letter-text">
+        <p class="letter-greeting">Hallo Lynnetty!!</p>
+
+        <p>You’re probably reading this after everything today. I’m not too
+          good at verbalizing my thoughts in person so I wrote this to express
+          and cement my feelings.</p>
+
+        <p>Thanks for sticking with me these past few months!! It’s been a
+          while since we started talking and, throughout it all, I’ve realized
+          how lucky I am to have met such a wonderful person. Even though we
+          were both busy, whenever we had something planned I would constantly
+          check the calendar for the day to come. And every time I saw you, I
+          was so happy because it meant I could learn more about you, eat like
+          Usagi, and yap all I wanted to.</p>
+
+        <p>From our dates, your stories, and meeting some of the people in
+          your life, I can tell how much your friends and family cherish you.
+          You’re an adorable, genuine, and kind person and I’m lucky to have
+          been able to share as much as we have so far. Everyday, I look
+          forward to seeing your texts, calling, and getting updates. I love
+          hearing all about your spontaneous adventures, eye-opening stories,
+          and matcha ratings nom nom. I will forever be excited to hear and
+          experience more with you.</p>
+
+        <p class="letter-signoff">
+          To more moments and memories,<br>
+          <span class="letter-signature">Matthew Truong</span>
+        </p>
+      </div>
     </div>
   </div>
 

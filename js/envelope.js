@@ -5,8 +5,8 @@
    After celebrate() calls startFloating(), the CSS-drawn envelope
    detaches and drifts DVD-screensaver style until she taps
    ("catches") it: it glides to center, the flap opens, and the
-   letter overlay (assets/letter.jpg) fades in. Closing the
-   overlay re-seals the envelope and it flies off again.
+   letter overlay (typed letter in index.html) fades in. Closing
+   the overlay re-seals the envelope and it flies off again.
 
    QUIRK — do not "modernize": the float uses left/top + rAF, not
    transforms, because the .caught glide-to-center transitions
@@ -16,23 +16,6 @@
 
 const envelope = $("#envelope");
 const letterOverlay = $("#letter-overlay");
-const letterImg = $("#letter-img");
-
-/* Load the letter photo, trying each extension like the gallery does.
-   If none exist, the overlay shows a friendly fallback note. */
-(function loadLetterImage() {
-  let extIndex = 0;
-  letterImg.addEventListener("load", () => letterImg.classList.add("loaded"));
-  letterImg.addEventListener("error", () => {
-    extIndex++;
-    if (extIndex >= PHOTO_EXTENSIONS.length) {
-      $("#letter-paper").classList.add("no-image");
-      return;
-    }
-    letterImg.src = `assets/letter.${PHOTO_EXTENSIONS[extIndex]}`;
-  });
-  letterImg.src = `assets/letter.${PHOTO_EXTENSIONS[extIndex]}`;
-})();
 
 /* --- Float physics (reduced motion: stays politely in place) --- */
 let floating = false;

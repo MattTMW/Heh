@@ -8,8 +8,7 @@
    Numbers that don't exist in any extension are silently skipped,
    so photos can be added/removed with zero code changes. The
    resulting 404s in the console are intentional — do not "fix"
-   them. PHOTO_EXTENSIONS is also used by the letter loader
-   (envelope.js).
+   them.
    ============================================================ */
 
 /* Uppercase variants included: deployed hosts (Netlify, GitHub Pages)

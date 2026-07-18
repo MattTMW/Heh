@@ -751,28 +751,46 @@ body.sad #bg-decor {
   transform: scale(1) translateY(0);
 }
 
-.letter-paper img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 8px;
+/* The letter itself — typed out, styled like handwriting on cream
+   stationery. Caveat loads from Google Fonts; the fallbacks keep a
+   handwritten feel offline (Bradley Hand on iOS/macOS). */
+.letter-text {
+  font-family: "Caveat", "Bradley Hand", "Segoe Script", "Comic Sans MS", cursive;
+  font-weight: 500;
+  font-size: clamp(1.3rem, 5.2vw, 1.55rem);
+  line-height: 1.5;
+  color: #45395c;
+  /* ink with a hint of purple */
+  text-align: left;
+  padding: 4px 12px 18px;
+  user-select: text;
+  -webkit-user-select: text;
+  /* she should be able to linger on it */
 }
 
-.letter-paper img:not(.loaded) {
-  display: none;
+.letter-text p {
+  margin-bottom: 1em;
 }
 
-/* Fallback note if letter.jpg isn't added yet */
-.letter-fallback {
-  display: none;
-  padding: 30px 18px;
-  color: #8a6aad;
-  font-size: 1.05rem;
-  line-height: 1.6;
+.letter-greeting {
+  font-size: 1.35em;
+  font-weight: 600;
+  color: var(--purple-primary);
 }
 
-.letter-paper.no-image .letter-fallback {
-  display: block;
+.letter-signoff {
+  margin-top: 1.6em;
+  margin-bottom: 0 !important;
+}
+
+.letter-signature {
+  display: inline-block;
+  margin-top: 0.25em;
+  font-size: 1.3em;
+  font-weight: 600;
+  color: var(--purple-primary);
+  transform: rotate(-2deg);
+  /* a signature never sits straight */
 }
 
 /* Cute close button: pink candy bubble with a white rim, springs on
